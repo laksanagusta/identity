@@ -62,3 +62,48 @@ func (h *ExternalOrganizationHandler) GetOrganization(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusOK).JSON(entities.ResponseData{Data: organizationData})
 }
+
+// GetOrganizations handles GET /api/v1/external/organizations
+// Endpoint untuk external API mendapatkan list organizations dengan API Key authentication
+func (h *ExternalOrganizationHandler) GetOrganizations(c *fiber.Ctx) error {
+	// Parse query parameters
+	var listOrganizationReq external.ListOrganizationReq
+	err := c.QueryParser(&listOrganizationReq)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid query parameters",
+		})
+	}
+
+	// Validate request
+	err = listOrganizationReq.Validate()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Create a dummy authenticated user for external API
+	// External API uses API Key authentication, not JWT
+	authUser := entities.AuthenticatedUser{
+		ID:       "external-api",
+		Username: "external-api",
+	}
+
+	// Get organizations from use case
+	organizations, metadata, err := h.organizationUc.ListOrganization(
+		c.Context(),
+		authUser,
+		listOrganizationReq.ToInternalReq(),
+	)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch organizations: " + err.Error(),
+		})
+	}
+
+	// Convert to external response
+	return c.Status(http.StatusOK).JSON(
+		external.NewListOrganizationResp(organizations, metadata),
+	)
+}

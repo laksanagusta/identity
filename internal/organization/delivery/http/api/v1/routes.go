@@ -20,5 +20,14 @@ func MapOrganization(routes fiber.Router, h organization.Handlers) {
 func MapExternalOrganization(routes fiber.Router, h *ExternalOrganizationHandler, cfg config.Config) {
 	// External organization endpoints (routes parameter already includes /api/v1/external prefix)
 	organizationsGroup := routes.Group("/organizations")
+	organizationsGroup.Get("/", h.GetOrganizations)
+	organizationsGroup.Get("/:id", h.GetOrganization)
+}
+
+// MapPublicOrganization maps public API routes without authentication
+func MapPublicOrganization(routes fiber.Router, h *PublicOrganizationHandler, cfg config.Config) {
+	// Public organization endpoints (routes parameter already includes /api/public/v1 prefix)
+	organizationsGroup := routes.Group("/organizations")
+	organizationsGroup.Get("/", h.GetOrganizations)
 	organizationsGroup.Get("/:id", h.GetOrganization)
 }

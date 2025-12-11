@@ -63,6 +63,14 @@ func (qp *QueryParser) parseFilter(key, value string) (Filter, error) {
 	// Convert value to appropriate type based on field
 	typedValue := qp.convertValue(key, filterValue)
 
+	// For IN/NOT IN operators, ensure value is always an array
+	if operator == "in" || operator == "nin" {
+		if _, isArray := typedValue.([]interface{}); !isArray {
+			// Wrap single value in array
+			typedValue = []interface{}{typedValue}
+		}
+	}
+
 	return Filter{
 		Field:    key,
 		Operator: operator,

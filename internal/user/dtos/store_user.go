@@ -1,6 +1,8 @@
 package dtos
 
 import (
+	"regexp"
+
 	"github.com/laksanagusta/identity/constants"
 	"github.com/laksanagusta/identity/internal/entities"
 	"github.com/laksanagusta/identity/pkg/errorhelper"
@@ -21,11 +23,30 @@ type CreateNewUserReq struct {
 	OrganizationUUID string              `json:"organization_id"`
 }
 
+// Password validation rules
+var (
+	hasUppercase = regexp.MustCompile(`[A-Z]`)
+	hasLowercase = regexp.MustCompile(`[a-z]`)
+	hasNumber    = regexp.MustCompile(`[0-9]`)
+	hasSymbol    = regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~` + "`" + `]`)
+)
+
+// ValidatePasswordStrength validates password strength
+var ValidatePasswordStrength = validation.NewStringRuleWithError(
+	func(s string) bool {
+		return hasUppercase.MatchString(s) &&
+			hasLowercase.MatchString(s) &&
+			hasNumber.MatchString(s) &&
+			hasSymbol.MatchString(s)
+	},
+	validation.NewError("validation_password_weak", "password harus mengandung kombinasi huruf besar, huruf kecil, angka, dan simbol"),
+)
+
 func (r CreateNewUserReq) Validate() error {
 	err := validation.ValidateStruct(&r,
 		validation.Field(&r.EmployeeID, validation.Required, validation.Length(1, 50)),
 		validation.Field(&r.Username, validation.Required, validation.Length(1, 255)),
-		validation.Field(&r.Password, validation.Required, validation.Length(8, 255)),
+		validation.Field(&r.Password, validation.Required, validation.Length(8, 255), ValidatePasswordStrength),
 		validation.Field(&r.FirstName, validation.Required, validation.Length(1, 255)),
 		validation.Field(&r.LastName, validation.Length(1, 255)),
 		validation.Field(&r.PhoneNumber, validation.Required, is.UTFNumeric, validation.Length(11, 13)),

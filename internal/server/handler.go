@@ -25,7 +25,7 @@ func (s *Server) MapHandlers() error {
 
 	apiV1 := s.Fiber.Group("/api/v1")
 
-	apiExternalV1 := s.Fiber.Group("/api/v1/external")
+	apiExternalV1 := s.Fiber.Group("external/api/v1")
 
 	apiPublicV1 := s.Fiber.Group("/api/public/v1")
 
@@ -35,7 +35,8 @@ func (s *Server) MapHandlers() error {
 
 	txManager := database.NewManager(s.DB)
 
-	// Apply AuthMiddleware to apiV1 group with required dependencies
+	apiExternalV1.Use(middleware.APIKeyMiddleware(s.Config))
+
 	apiV1.Use(middleware.AuthMiddleware(s.Config, userRepo))
 
 	userUseCase := userusecase.NewUserUseCase(userusecase.UseCaseParameter{
@@ -52,16 +53,17 @@ func (s *Server) MapHandlers() error {
 	userHandler := userhandler.NewUserHandler(s.Config, userUseCase)
 	userhandler.MapUser(apiV1, apiPublicV1, userHandler)
 
-	// External API routes with API Key authentication
 	externalUserHandler := userhandler.NewExternalUserHandler(s.Config, userUseCase)
 	userhandler.MapExternalUser(apiExternalV1, externalUserHandler, s.Config)
 
 	organizationHandler := organizationhandler.NewOrganizationHandler(s.Config, organizationUseCase)
 	organizationhandler.MapOrganization(apiV1, organizationHandler)
 
-	// External API routes with API Key authentication for organizations
 	externalOrganizationHandler := organizationhandler.NewExternalOrganizationHandler(s.Config, organizationUseCase)
 	organizationhandler.MapExternalOrganization(apiExternalV1, externalOrganizationHandler, s.Config)
+
+	publicOrganizationHandler := organizationhandler.NewPublicOrganizationHandler(s.Config, organizationUseCase)
+	organizationhandler.MapPublicOrganization(apiPublicV1, publicOrganizationHandler, s.Config)
 
 	return nil
 }

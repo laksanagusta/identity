@@ -133,3 +133,26 @@ func GetAuthenticatedUser(c *fiber.Ctx) (*entities.AuthenticatedUser, error) {
 	}
 	return user, nil
 }
+
+// APIKeyMiddleware creates a middleware that validates x-api-key header against APP_KEY
+func APIKeyMiddleware(cfg config.Config) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Get x-api-key header
+		apiKey := c.Get("x-api-key")
+		if apiKey == "" {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+				"error": "x-api-key header is required",
+			})
+		}
+
+		// Validate API key against APP_KEY from config
+		if apiKey != cfg.App.Key {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid API key",
+			})
+		}
+
+		// Continue to next handler
+		return c.Next()
+	}
+}

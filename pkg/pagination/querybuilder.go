@@ -149,6 +149,7 @@ func (qb *QueryBuilder) isValidField(field string) bool {
 		"name":        true,
 		"created_at":  true,
 		"employee_id": true,
+		"uuid":        true,
 	}
 	return validFields[field]
 }
