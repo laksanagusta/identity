@@ -8,10 +8,12 @@ import (
 )
 
 type ShowOrganizationRes struct {
-	UUID    string              `json:"id"`
-	Name    nullable.NullString `json:"name"`
-	Address nullable.NullString `json:"address"`
-	Type    nullable.NullString `json:"type"`
+	UUID    string                `json:"id"`
+	Name    nullable.NullString   `json:"name"`
+	Code    nullable.NullString   `json:"code"`
+	Address nullable.NullString   `json:"address"`
+	Type    nullable.NullString   `json:"type"`
+	Parent  *ShowOrganizationRes  `json:"parent,omitempty"`
 
 	Organizations []ShowOrganizationRes `json:"organizations"`
 
@@ -27,10 +29,17 @@ func NewShowOrganizationRes(organization *entities.Organization) ShowOrganizatio
 	res := ShowOrganizationRes{
 		UUID:      organization.UUID,
 		Name:      organization.Name,
+		Code:      organization.Code,
 		Address:   organization.Address,
 		Type:      organization.Type,
 		CreatedAt: organization.CreatedAt,
 		CreatedBy: organization.CreatedBy,
+	}
+
+	// Include parent information if available
+	if organization.Parent != nil {
+		parentRes := NewShowOrganizationRes(organization.Parent)
+		res.Parent = &parentRes
 	}
 
 	if organization.Children != nil {

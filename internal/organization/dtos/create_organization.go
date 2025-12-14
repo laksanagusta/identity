@@ -1,6 +1,9 @@
 package dtos
 
 import (
+	"strings"
+	"unicode"
+
 	"github.com/laksanagusta/identity/internal/entities"
 	"github.com/laksanagusta/identity/pkg/nullable"
 
@@ -29,6 +32,32 @@ func (r CreateNewOrganizationReq) Validate() error {
 	)
 }
 
+// generateOrganizationCode generates a code from organization name by converting to lowercase and replacing spaces with hyphens
+func generateOrganizationCode(name string) string {
+	if name == "" {
+		return ""
+	}
+
+	// Convert to lowercase and replace spaces/multiple spaces with single hyphen
+	words := strings.Fields(strings.ToLower(name))
+	var codeWords []string
+
+	for _, word := range words {
+		// Remove special characters, keep only alphanumeric and spaces
+		var cleanWord strings.Builder
+		for _, r := range word {
+			if unicode.IsLetter(r) || unicode.IsDigit(r) {
+				cleanWord.WriteRune(r)
+			}
+		}
+		if cleanWord.Len() > 0 {
+			codeWords = append(codeWords, cleanWord.String())
+		}
+	}
+
+	return strings.Join(codeWords, "-")
+}
+
 func (r CreateNewOrganizationReq) NewOrganization(cred entities.AuthenticatedUser) entities.Organization {
 	organization := entities.Organization{
 		Name:       r.Name,
@@ -39,6 +68,16 @@ func (r CreateNewOrganizationReq) NewOrganization(cred entities.AuthenticatedUse
 
 	baseModel := entities.NewBaseModel(cred.Username)
 	organization.BaseModel = baseModel
+
+	// Generate organization code from name or use fallback
+	var orgCode string
+	if r.Name.IsExists && r.Name.Val != nil {
+		orgCode = generateOrganizationCode(*r.Name.Val)
+	} else {
+		// Fallback: generate code from UUID if name is not available
+		orgCode = "org-" + organization.UUID[:8] // Use first 8 characters of UUID
+	}
+	organization.Code = nullable.NewString(orgCode)
 
 	return organization
 }

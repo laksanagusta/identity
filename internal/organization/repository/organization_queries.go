@@ -2,17 +2,18 @@ package repository
 
 var (
 	insertOrganization = `INSERT INTO organizations (
-		uuid, 
+		uuid,
 		name,
+		code,
 		address,
 		type,
 		path,
 		parent_uuid,
-		created_at, 
+		created_at,
 		created_by,
 		updated_at,
 		updated_by
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING UUID`
 
 	updateOrganization = `
@@ -26,17 +27,17 @@ var (
 	`
 
 	findOrganizationById = `
-		SELECT 
-			uuid, 
-			name, 
-			code, 
-			address, 
-			type, 
-			parent_uuid, 
-			path, 
-			level, 
-			is_active, 
-			created_at, 
+		SELECT
+			uuid,
+			name,
+			code,
+			address,
+			type,
+			parent_uuid,
+			path,
+			level,
+			is_active,
+			created_at,
 			created_by,
 			updated_at,
 			updated_by

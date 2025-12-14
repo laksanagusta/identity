@@ -9,22 +9,23 @@ import (
 
 // ExternalOrganizationRes response structure untuk external API
 type ExternalOrganizationRes struct {
-	UUID      string              `json:"id"`
-	Name      nullable.NullString `json:"name"`
-	Code      nullable.NullString `json:"code"`
-	Address   nullable.NullString `json:"address"`
-	Type      nullable.NullString `json:"type"`
-	ParentUUID nullable.NullString `json:"parent_id"`
-	Level     nullable.NullInt32  `json:"level"`
-	Path      nullable.NullString `json:"path"`
-	IsActive  bool                `json:"is_active"`
-	CreatedAt time.Time           `json:"created_at"`
-	UpdatedAt time.Time           `json:"updated_at"`
+	UUID      string                  `json:"id"`
+	Name      nullable.NullString     `json:"name"`
+	Code      nullable.NullString     `json:"code"`
+	Address   nullable.NullString     `json:"address"`
+	Type      nullable.NullString     `json:"type"`
+	ParentUUID nullable.NullString    `json:"parent_id"`
+	Parent    *ExternalOrganizationRes `json:"parent,omitempty"`
+	Level     nullable.NullInt32      `json:"level"`
+	Path      nullable.NullString     `json:"path"`
+	IsActive  bool                    `json:"is_active"`
+	CreatedAt time.Time               `json:"created_at"`
+	UpdatedAt time.Time               `json:"updated_at"`
 }
 
 // NewExternalOrganizationRes convert dari entities.Organization ke ExternalOrganizationRes
 func NewExternalOrganizationRes(organization entities.Organization) ExternalOrganizationRes {
-	return ExternalOrganizationRes{
+	res := ExternalOrganizationRes{
 		UUID:       organization.UUID,
 		Name:       organization.Name,
 		Code:       organization.Code,
@@ -37,4 +38,12 @@ func NewExternalOrganizationRes(organization entities.Organization) ExternalOrga
 		CreatedAt:  organization.CreatedAt,
 		UpdatedAt:  organization.UpdatedAt,
 	}
+
+	// Include parent information if available
+	if organization.Parent != nil {
+		parentRes := NewExternalOrganizationRes(*organization.Parent)
+		res.Parent = &parentRes
+	}
+
+	return res
 }

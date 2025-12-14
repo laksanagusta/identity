@@ -35,6 +35,7 @@ func (r *organizationRepo) Insert(ctx context.Context, organization entities.Org
 	err := r.db.GetContext(ctx, &returnedUUID, insertOrganization,
 		organization.UUID,
 		organization.Name,
+		organization.Code,
 		organization.Address,
 		organization.Type,
 		organization.Path,
@@ -138,14 +139,30 @@ func (r *organizationRepo) FindOrganizationByUUID(ctx context.Context, rootUUID 
 		if node.UUID == rootUUID {
 			root = node
 		}
+	}
 
-		// Hanya tambahkan ke parent jika parent ADA dan BUKAN diri sendiri
-		if n.ParentUUID.IsExists && n.ParentUUID.Val != nil {
-			parentUUID := *n.ParentUUID.Val
+	// Build parent-child relationships after all nodes are processed
+	for _, node := range nodes {
+		if node.ParentUUID.IsExists && node.ParentUUID.Val != nil {
+			parentUUID := *node.ParentUUID.Val
 			if parentUUID != node.UUID { // Hindari self-reference
 				if parent, ok := nodes[parentUUID]; ok {
 					parent.Children = append(parent.Children, node)
+					// Set the Parent field for the current node
+					node.Parent = parent
 				}
+			}
+		}
+	}
+
+	// If root is found and has no parent set, try to fetch it
+	if root != nil && root.Parent == nil && root.ParentUUID.IsExists && root.ParentUUID.Val != nil {
+		parentUUID := *root.ParentUUID.Val
+		if _, ok := nodes[parentUUID]; !ok {
+			// Parent not in current nodes, fetch it separately
+			parentOrg, err := r.findSingleOrganizationByUUID(ctx, parentUUID)
+			if err == nil && parentOrg != nil {
+				root.Parent = parentOrg
 			}
 		}
 	}
@@ -155,6 +172,35 @@ func (r *organizationRepo) FindOrganizationByUUID(ctx context.Context, rootUUID 
 	}
 
 	return root, nil
+}
+
+// Helper function to fetch a single organization by UUID
+func (r *organizationRepo) findSingleOrganizationByUUID(ctx context.Context, uuid string) (*entities.Organization, error) {
+	var org entities.Organization
+	err := r.db.QueryRowxContext(ctx, `
+		SELECT
+			uuid,
+			name,
+			code,
+			address,
+			type,
+			parent_uuid,
+			path,
+			level,
+			is_active,
+			created_at,
+			created_by,
+			updated_at,
+			updated_by
+		FROM organizations
+		WHERE uuid = $1 AND deleted_at IS NULL
+	`, uuid).StructScan(&org)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &org, nil
 }
 
 func (r *organizationRepo) IndexOrganization(ctx context.Context, params entities.ListOrganizationParams) ([]entities.Organization, *entities.Metadata, error) {
