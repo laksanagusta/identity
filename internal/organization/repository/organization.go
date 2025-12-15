@@ -142,14 +142,15 @@ func (r *organizationRepo) FindOrganizationByUUID(ctx context.Context, rootUUID 
 	}
 
 	// Build parent-child relationships after all nodes are processed
+	// Note: We only set children, NOT parent for children nodes to avoid circular reference
 	for _, node := range nodes {
 		if node.ParentUUID.IsExists && node.ParentUUID.Val != nil {
 			parentUUID := *node.ParentUUID.Val
 			if parentUUID != node.UUID { // Hindari self-reference
 				if parent, ok := nodes[parentUUID]; ok {
 					parent.Children = append(parent.Children, node)
-					// Set the Parent field for the current node
-					node.Parent = parent
+					// Note: We intentionally DO NOT set node.Parent here to avoid circular reference
+					// Parent will only be set for the root node (fetched separately below)
 				}
 			}
 		}
@@ -195,7 +196,6 @@ func (r *organizationRepo) findSingleOrganizationByUUID(ctx context.Context, uui
 		FROM organizations
 		WHERE uuid = $1 AND deleted_at IS NULL
 	`, uuid).StructScan(&org)
-
 	if err != nil {
 		return nil, err
 	}

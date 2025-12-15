@@ -27,23 +27,27 @@ var (
 	`
 
 	findOrganizationById = `
+		WITH target_org AS (
+			SELECT uuid, path FROM organizations WHERE uuid = $1 AND deleted_at IS NULL
+		)
 		SELECT
-			uuid,
-			name,
-			code,
-			address,
-			type,
-			parent_uuid,
-			path,
-			level,
-			is_active,
-			created_at,
-			created_by,
-			updated_at,
-			updated_by
-		FROM organizations
-		WHERE uuid = $1 OR path LIKE ($1 || '%')
-		ORDER BY path
+			o.uuid,
+			o.name,
+			o.code,
+			o.address,
+			o.type,
+			o.parent_uuid,
+			o.path,
+			o.level,
+			o.is_active,
+			o.created_at,
+			o.created_by,
+			o.updated_at,
+			o.updated_by
+		FROM organizations o, target_org t
+		WHERE o.deleted_at IS NULL 
+			AND (o.uuid = t.uuid OR o.path LIKE t.path || '.%')
+		ORDER BY o.path
 	`
 
 	listOrganization = `

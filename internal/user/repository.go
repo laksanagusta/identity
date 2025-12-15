@@ -19,10 +19,15 @@ type Repository interface {
 
 	// role
 	FindRoleByUUID(ctx context.Context, uuid string) (*entities.Role, error)
+	FindRoleWithPermissions(ctx context.Context, uuid string) (*entities.Role, error)
 	FindRole(ctx context.Context) ([]entities.Role, error)
 	FindRoleByName(ctx context.Context, name string) (*entities.Role, error)
 	DeleteRole(ctx context.Context, uuid string) error
 	InsertRole(ctx context.Context, role entities.Role) (string, error)
+	UpdateRole(ctx context.Context, role entities.Role) error
+	IndexRole(ctx context.Context, params *pagination.QueryParams) ([]*entities.Role, int64, error)
+	BulkInsertRolePermissions(ctx context.Context, rolePermissions []entities.RolaPermission) error
+	DeleteRolePermissionsByRoleUUID(ctx context.Context, roleUUID string) error
 
 	// user-role
 	InsertUserRole(ctx context.Context, userRole entities.UserRole) (string, error)

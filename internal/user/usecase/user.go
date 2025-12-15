@@ -465,20 +465,113 @@ func (uc *UserUseCase) DeleteUserRole(ctx context.Context, uuid string) error {
 	return nil
 }
 
-func (uc *UserUseCase) CreateRole(ctx context.Context, role entities.Role) error {
+func (uc *UserUseCase) CreateRole(ctx context.Context, req dtos.CreateRoleReq, cred entities.AuthenticatedUser) (string, error) {
+	role := req.NewRole(cred)
+
 	roleExist, err := uc.userRepo.FindRoleByName(ctx, *role.Name.Val)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if roleExist != nil {
-		return errorhelper.BadRequestMap(map[string][]string{
+		return "", errorhelper.BadRequestMap(map[string][]string{
 			"role_name": {constants.ErrMsgAlreadyExist},
 		})
 	}
 
-	_, err = uc.userRepo.InsertRole(ctx, role)
+	roleUUID, err := uc.userRepo.InsertRole(ctx, role)
+	if err != nil {
+		return "", err
+	}
+
+	// Insert role permissions if provided
+	if len(req.PermissionIDs) > 0 {
+		now := time.Now()
+		rolePermissions := make([]entities.RolaPermission, 0, len(req.PermissionIDs))
+		for _, permID := range req.PermissionIDs {
+			rolePermissions = append(rolePermissions, entities.RolaPermission{
+				BaseModel: entities.BaseModel{
+					UUID:      uuid.NewString(),
+					CreatedAt: now,
+					CreatedBy: cred.Username,
+					UpdatedAt: now,
+					UpdatedBy: cred.Username,
+				},
+				RoleUUID:       roleUUID,
+				PermissionUUID: permID,
+			})
+		}
+
+		err = uc.userRepo.BulkInsertRolePermissions(ctx, rolePermissions)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return roleUUID, nil
+}
+
+func (uc *UserUseCase) ShowRole(ctx context.Context, uuid string) (*entities.Role, error) {
+	role, err := uc.userRepo.FindRoleWithPermissions(ctx, uuid)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		return nil, errorhelper.BadRequestMap(map[string][]string{
+			"role_id": {constants.ErrMsgNotFound},
+		})
+	}
+
+	return role, nil
+}
+
+func (uc *UserUseCase) UpdateRole(ctx context.Context, req dtos.UpdateRoleReq, cred entities.AuthenticatedUser) error {
+	role := req.NewRole(cred)
+
+	existingRole, err := uc.userRepo.FindRoleByUUID(ctx, req.RoleUUID)
 	if err != nil {
 		return err
+	}
+	if existingRole == nil {
+		return errorhelper.BadRequestMap(map[string][]string{
+			"role_id": {constants.ErrMsgNotFound},
+		})
+	}
+
+	// Update role
+	err = uc.userRepo.UpdateRole(ctx, role)
+	if err != nil {
+		return err
+	}
+
+	// Update role permissions if provided
+	if len(req.PermissionIDs) > 0 {
+		// Delete existing permissions
+		err = uc.userRepo.DeleteRolePermissionsByRoleUUID(ctx, req.RoleUUID)
+		if err != nil {
+			return err
+		}
+
+		// Insert new permissions
+		now := time.Now()
+		rolePermissions := make([]entities.RolaPermission, 0, len(req.PermissionIDs))
+		for _, permID := range req.PermissionIDs {
+			rolePermissions = append(rolePermissions, entities.RolaPermission{
+				BaseModel: entities.BaseModel{
+					UUID:      uuid.NewString(),
+					CreatedAt: now,
+					CreatedBy: cred.Username,
+					UpdatedAt: now,
+					UpdatedBy: cred.Username,
+				},
+				RoleUUID:       req.RoleUUID,
+				PermissionUUID: permID,
+			})
+		}
+
+		err = uc.userRepo.BulkInsertRolePermissions(ctx, rolePermissions)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -635,6 +728,58 @@ func (uc *UserUseCase) IndexPermission(ctx context.Context, params *pagination.Q
 	}
 
 	return permissions, &pagination.PagedResponse{
+		Page:       params.Pagination.Page,
+		Limit:      params.Pagination.Limit,
+		TotalItems: totalCount,
+		TotalPages: totalPages,
+	}, nil
+}
+
+func (uc *UserUseCase) IndexRole(ctx context.Context, params *pagination.QueryParams) ([]*entities.Role, *pagination.PagedResponse, error) {
+	roles, totalCount, err := uc.userRepo.IndexRole(ctx, params)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Get role UUIDs
+	roleUUIDs := make([]string, 0, len(roles))
+	roleIndex := make(map[string]int)
+	for i, role := range roles {
+		if role != nil {
+			roleUUIDs = append(roleUUIDs, role.UUID)
+			roleIndex[role.UUID] = i
+		}
+	}
+
+	// Get permissions for all roles
+	if len(roleUUIDs) > 0 {
+		rolePermissions, err := uc.userRepo.FindPermissionByRoleUUIDs(ctx, roleUUIDs)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// Get role-permission mappings to assign permissions to correct roles
+		for _, roleUUID := range roleUUIDs {
+			perms, err := uc.userRepo.FindPermissionByRoleUUIDs(ctx, []string{roleUUID})
+			if err != nil {
+				continue
+			}
+			idx := roleIndex[roleUUID]
+			for _, p := range perms {
+				if p != nil {
+					roles[idx].Permissions = append(roles[idx].Permissions, *p)
+				}
+			}
+		}
+		_ = rolePermissions // Not used directly, fetched per role above
+	}
+
+	totalPages := int(totalCount) / params.Pagination.Limit
+	if int(totalCount)%params.Pagination.Limit > 0 {
+		totalPages++
+	}
+
+	return roles, &pagination.PagedResponse{
 		Page:       params.Pagination.Page,
 		Limit:      params.Pagination.Limit,
 		TotalItems: totalCount,

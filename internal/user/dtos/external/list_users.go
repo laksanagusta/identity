@@ -26,7 +26,6 @@ func (r ExternalListUserReq) Validate() error {
 		validation.Field(&r.Limit, validation.Min(1), validation.Max(100)),
 		validation.Field(&r.Page, validation.Min(1)),
 		validation.Field(&r.Search, validation.Length(1, 255)),
-		validation.Field(&r.EmployeeID, validation.Length(1, 50)),
 		validation.Field(&r.Username, validation.Length(1, 255)),
 	)
 }

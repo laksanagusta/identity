@@ -9,6 +9,7 @@ type QueryParams struct {
 	Filters    []Filter
 	Sorts      []Sort
 	Pagination Pagination
+	Search     string
 }
 
 type Filter struct {
@@ -101,6 +102,31 @@ func (qb *QueryBuilder) AddSort(sort Sort) error {
 	return nil
 }
 
+func (qb *QueryBuilder) AddSearch(term string, fields []string) error {
+	if term == "" || len(fields) == 0 {
+		return nil
+	}
+
+	var searchConditions []string
+	searchTerm := "%" + term + "%"
+
+	for _, field := range fields {
+		field = qb.sanitizeField(field)
+		if !qb.isValidField(field) {
+			return fmt.Errorf("invalid field: %s", field)
+		}
+		searchConditions = append(searchConditions, fmt.Sprintf("LOWER(%s) ILIKE LOWER($%d)", field, qb.argCounter))
+	}
+
+	if len(searchConditions) > 0 {
+		qb.whereClause = append(qb.whereClause, fmt.Sprintf("(%s)", strings.Join(searchConditions, " OR ")))
+		qb.args = append(qb.args, searchTerm)
+		qb.argCounter++
+	}
+
+	return nil
+}
+
 func (qb *QueryBuilder) AddPagination(pagination Pagination) {
 	// Pagination will be handled separately with LIMIT and OFFSET
 }
@@ -150,6 +176,8 @@ func (qb *QueryBuilder) isValidField(field string) bool {
 		"created_at":  true,
 		"employee_id": true,
 		"uuid":        true,
+		"username":    true,
+		"first_name":  true,
 	}
 	return validFields[field]
 }

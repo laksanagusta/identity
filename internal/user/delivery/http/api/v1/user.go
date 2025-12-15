@@ -5,6 +5,7 @@ import (
 
 	"github.com/laksanagusta/identity/config"
 	"github.com/laksanagusta/identity/internal/entities"
+	"github.com/laksanagusta/identity/internal/middleware"
 	"github.com/laksanagusta/identity/internal/user"
 	"github.com/laksanagusta/identity/internal/user/dtos"
 	"github.com/laksanagusta/identity/pkg/pagination"
@@ -66,9 +67,15 @@ func (h *userHandler) Update(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	err = h.userUc.Update(
 		c.Context(),
-		*c.Locals("authenticatedUser").(*entities.AuthenticatedUser),
+		*authUser,
 		updateUser,
 	)
 	if err != nil {
@@ -124,7 +131,11 @@ func (h *userHandler) Login(c *fiber.Ctx) error {
 }
 
 func (h *userHandler) Whoami(c *fiber.Ctx) error {
-	authUser := c.Locals("authenticatedUser").(*entities.AuthenticatedUser)
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
 
 	user, permissionsStr, err := h.userUc.Show(
 		c.Context(),
@@ -148,6 +159,33 @@ func (h *userHandler) Role(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(entities.ResponseData{Data: dtos.NewListRoleResp(role)})
+}
+
+func (h *userHandler) IndexRole(c *fiber.Ctx) error {
+	queryParams := make(map[string]string)
+	c.Context().QueryArgs().VisitAll(func(key, value []byte) {
+		queryParams[string(key)] = string(value)
+	})
+
+	queryParser := &pagination.QueryParser{}
+	params, err := queryParser.Parse(queryParams)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid query parameters: " + err.Error(),
+		})
+	}
+
+	roles, pagination, err := h.userUc.IndexRole(c.Context(), params)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	res := dtos.NewListRoleResp2(roles)
+	pagination.Data = res
+
+	return c.JSON(pagination)
 }
 
 func (h *userHandler) Index(c *fiber.Ctx) error {
@@ -187,9 +225,15 @@ func (h *userHandler) Delete(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	err = h.userUc.Delete(
 		c.Context(),
-		*c.Locals("authenticatedUser").(*entities.AuthenticatedUser),
+		*authUser,
 		params.UserUUID,
 	)
 	if err != nil {
@@ -215,9 +259,15 @@ func (h *userHandler) ChangePassword(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	err = h.userUc.ChangePassword(
 		c.Context(),
-		*c.Locals("authenticatedUser").(*entities.AuthenticatedUser),
+		*authUser,
 		changePassword,
 	)
 	if err != nil {
@@ -239,11 +289,72 @@ func (h *userHandler) CreateRole(c *fiber.Ctx) error {
 		return err
 	}
 
-	cred := c.Locals("authenticatedUser").(*entities.AuthenticatedUser)
-	role := createRole.NewRole(*cred)
-	err = h.userUc.CreateRole(
+	// Safely get authenticated user
+	cred, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	roleID, err := h.userUc.CreateRole(
 		c.Context(),
-		role,
+		createRole,
+		*cred,
+	)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(http.StatusOK).JSON(entities.ResponseData{Data: map[string]string{"id": roleID}})
+}
+
+func (h *userHandler) ShowRole(c *fiber.Ctx) error {
+	var params struct {
+		RoleUUID string `params:"roleUUID"`
+	}
+
+	err := c.ParamsParser(&params)
+	if err != nil {
+		return err
+	}
+
+	role, err := h.userUc.ShowRole(
+		c.Context(),
+		params.RoleUUID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(http.StatusOK).JSON(entities.ResponseData{Data: dtos.NewShowRoleResp(role)})
+}
+
+func (h *userHandler) UpdateRole(c *fiber.Ctx) error {
+	var updateRole dtos.UpdateRoleReq
+	err := c.ParamsParser(&updateRole)
+	if err != nil {
+		return err
+	}
+
+	err = c.BodyParser(&updateRole)
+	if err != nil {
+		return err
+	}
+
+	err = updateRole.Validate()
+	if err != nil {
+		return err
+	}
+
+	// Safely get authenticated user
+	cred, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	err = h.userUc.UpdateRole(
+		c.Context(),
+		updateRole,
+		*cred,
 	)
 	if err != nil {
 		return err
@@ -285,7 +396,12 @@ func (h *userHandler) CreateUserRole(c *fiber.Ctx) error {
 		return err
 	}
 
-	cred := c.Locals("authenticatedUser").(*entities.AuthenticatedUser)
+	// Safely get authenticated user
+	cred, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	role := createUserRole.NewUserRole(cred.Username)
 	err = h.userUc.CreateUserRole(
 		c.Context(),
@@ -331,7 +447,12 @@ func (h *userHandler) CreatePermission(c *fiber.Ctx) error {
 		return err
 	}
 
-	cred := c.Locals("authenticatedUser").(*entities.AuthenticatedUser)
+	// Safely get authenticated user
+	cred, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	permission := createPermissionReq.NewPermission(cred.Username)
 	err = h.userUc.CreatePermission(
 		c.Context(),
@@ -366,7 +487,12 @@ func (h *userHandler) UpdatePermission(c *fiber.Ctx) error {
 		return err
 	}
 
-	cred := c.Locals("authenticatedUser").(*entities.AuthenticatedUser)
+	// Safely get authenticated user
+	cred, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	permission := updatePermissionReq.NewPermission(cred.Username)
 	err = h.userUc.UpdatePermission(
 		c.Context(),
@@ -412,7 +538,12 @@ func (h *userHandler) CreateRolePermission(c *fiber.Ctx) error {
 		return err
 	}
 
-	cred := c.Locals("authenticatedUser").(*entities.AuthenticatedUser)
+	// Safely get authenticated user
+	cred, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	rolePermission := createRolePermissionReq.NewRolePermission(cred.Username)
 	err = h.userUc.CreateRolePermission(
 		c.Context(),

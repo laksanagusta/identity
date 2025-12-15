@@ -18,8 +18,11 @@ type UseCase interface {
 	ChangePassword(ctx context.Context, cred entities.AuthenticatedUser, req dtos.ChangePassword) error
 
 	Role(ctx context.Context) ([]entities.Role, error)
-	CreateRole(ctx context.Context, role entities.Role) error
+	CreateRole(ctx context.Context, req dtos.CreateRoleReq, cred entities.AuthenticatedUser) (string, error)
+	UpdateRole(ctx context.Context, req dtos.UpdateRoleReq, cred entities.AuthenticatedUser) error
+	ShowRole(ctx context.Context, uuid string) (*entities.Role, error)
 	DeleteRole(ctx context.Context, uuid string) error
+	IndexRole(ctx context.Context, params *pagination.QueryParams) ([]*entities.Role, *pagination.PagedResponse, error)
 
 	CreateUserRole(ctx context.Context, userRole entities.UserRole) error
 	DeleteUserRole(ctx context.Context, uuid string) error

@@ -54,18 +54,22 @@ func (s *Server) Run() error {
 
 	s.Fiber.Use(middleware.CORS())
 
-	var recoverHandler func(c *fiber.Ctx, e interface{}) = func(c *fiber.Ctx, e interface{}) {
-		stackTrace := debug.Stack()
-		c.Locals("IsRecovered", true)
-		c.Locals("StackTrace", stackTrace)
-	}
-	if s.Config.App.Env == "local" {
-		// Remove custom panic recover handler because we can rely on default recover handler from
-		// Fiber. Fiber already gave sufficient stack trace logging if panic happens.
-		recoverHandler = nil
-	}
-	// Recover Middleware
-	s.Fiber.Use(recover.New(recover.Config{EnableStackTrace: true, StackTraceHandler: recoverHandler}))
+	// Panic Recovery Middleware - mencegah aplikasi berhenti saat terjadi panic
+	// Menggunakan custom middleware untuk logging yang lebih baik
+	s.Fiber.Use(middleware.RecoveryMiddleware(s.Logger))
+
+	// Backup: Fiber's built-in recover sebagai safety net tambahan
+	s.Fiber.Use(recover.New(recover.Config{
+		EnableStackTrace: true,
+		StackTraceHandler: func(c *fiber.Ctx, e interface{}) {
+			stackTrace := debug.Stack()
+			s.Logger.Errorw("Fiber recover caught panic (backup handler)",
+				"error", e,
+				"path", c.Path(),
+				"stack_trace", string(stackTrace),
+			)
+		},
+	}))
 
 	// Swagger Handler
 	// s.Fiber.Get("/swagger/*", swagger.HandlerDefault)

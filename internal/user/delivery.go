@@ -18,7 +18,10 @@ type Handlers interface {
 	// role
 	Role(c *fiber.Ctx) error
 	CreateRole(c *fiber.Ctx) error
+	ShowRole(c *fiber.Ctx) error
+	UpdateRole(c *fiber.Ctx) error
 	DeleteRole(c *fiber.Ctx) error
+	IndexRole(c *fiber.Ctx) error
 
 	// user-role
 	CreateUserRole(c *fiber.Ctx) error

@@ -5,6 +5,7 @@ import (
 
 	"github.com/laksanagusta/identity/config"
 	"github.com/laksanagusta/identity/internal/entities"
+	"github.com/laksanagusta/identity/internal/middleware"
 	"github.com/laksanagusta/identity/internal/organization"
 	"github.com/laksanagusta/identity/internal/organization/dtos"
 
@@ -35,9 +36,15 @@ func (h *organizationHandler) Organization(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	organizationId, err := h.organizationUc.Create(
 		c.Context(),
-		*c.Locals("authenticatedUser").(*entities.AuthenticatedUser),
+		*authUser,
 		createOrganization,
 	)
 	if err != nil {
@@ -57,9 +64,15 @@ func (h *organizationHandler) Show(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	organization, err := h.organizationUc.Show(
 		c.Context(),
-		*c.Locals("authenticatedUser").(*entities.AuthenticatedUser),
+		*authUser,
 		params.OrganizationUUID,
 	)
 	if err != nil {
@@ -81,9 +94,15 @@ func (h *organizationHandler) Index(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	organizations, metadata, err := h.organizationUc.ListOrganization(
 		c.Context(),
-		*c.Locals("authenticatedUser").(*entities.AuthenticatedUser),
+		*authUser,
 		listProductReq,
 	)
 	if err != nil {
@@ -112,9 +131,15 @@ func (h *organizationHandler) Update(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	err = h.organizationUc.Update(
 		c.Context(),
-		*c.Locals("authenticatedUser").(*entities.AuthenticatedUser),
+		*authUser,
 		updateOrganization,
 	)
 	if err != nil {
@@ -134,9 +159,15 @@ func (h *organizationHandler) Delete(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	err = h.organizationUc.Delete(
 		c.Context(),
-		*c.Locals("authenticatedUser").(*entities.AuthenticatedUser),
+		*authUser,
 		params.OrganizationUUID,
 	)
 	if err != nil {

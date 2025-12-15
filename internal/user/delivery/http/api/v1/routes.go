@@ -22,7 +22,10 @@ func MapUser(routes fiber.Router, public fiber.Router, h user.Handlers) {
 
 	roleGroup := routes.Group("/roles")
 	roleGroup.Get("/", h.Role)
+	roleGroup.Get("/list", h.IndexRole)
 	roleGroup.Post("/", h.CreateRole)
+	roleGroup.Get("/:roleUUID", h.ShowRole)
+	roleGroup.Patch("/:roleUUID", h.UpdateRole)
 	roleGroup.Delete("/:roleUUID", h.DeleteRole)
 
 	userRoleGroup := routes.Group("/user-roles")

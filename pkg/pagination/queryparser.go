@@ -41,6 +41,11 @@ func (qp *QueryParser) Parse(params map[string]string) (*QueryParams, error) {
 			continue
 		}
 
+		if key == "search" {
+			result.Search = value
+			continue
+		}
+
 		filter, err := qp.parseFilter(key, value)
 		if err == nil {
 			result.Filters = append(result.Filters, filter)
