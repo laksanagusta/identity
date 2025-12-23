@@ -8,16 +8,19 @@ import (
 
 type User struct {
 	SoftDeleteModel
-	EmployeeID       nullable.NullString `json:"employee_id" db:"employee_id"`
-	Username         nullable.NullString `json:"username" db:"username"`
-	Email            nullable.NullString `json:"email" db:"email"`
-	FirstName        nullable.NullString `json:"first_name" db:"first_name"`
-	LastName         nullable.NullString `json:"last_name" db:"last_name"`
-	PhoneNumber      nullable.NullString `json:"phone_number" db:"phone_number"`
-	PasswordHash     nullable.NullString `json:"-" db:"password_hash"`
-	OrganizationUUID nullable.NullString `json:"organization_id" db:"organization_uuid"`
-	IsActive         bool                `json:"is_active" db:"is_active"`
-	LastLoginAt      *time.Time          `json:"last_login_at" db:"last_login_at"`
+	EmployeeID          nullable.NullString `json:"employee_id" db:"employee_id"`
+	Username            nullable.NullString `json:"username" db:"username"`
+	Email               nullable.NullString `json:"email" db:"email"`
+	FirstName           nullable.NullString `json:"first_name" db:"first_name"`
+	LastName            nullable.NullString `json:"last_name" db:"last_name"`
+	PhoneNumber         nullable.NullString `json:"phone_number" db:"phone_number"`
+	PasswordHash        nullable.NullString `json:"-" db:"password_hash"`
+	OrganizationUUID    nullable.NullString `json:"organization_id" db:"organization_uuid"`
+	IsActive            bool                `json:"is_active" db:"is_active"`
+	IsApproved          bool                `json:"is_approved" db:"is_approved"`
+	LastLoginAt         *time.Time          `json:"last_login_at" db:"last_login_at"`
+	AvatarGradientStart nullable.NullString `json:"avatar_gradient_start" db:"avatar_gradient_start"`
+	AvatarGradientEnd   nullable.NullString `json:"avatar_gradient_end" db:"avatar_gradient_end"`
 
 	Organization *Organization `json:"organization,omitempty" db:"-"`
 	Roles        []*Role       `json:"roles,omitempty" db:"-"`

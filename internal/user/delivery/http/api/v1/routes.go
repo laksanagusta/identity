@@ -19,6 +19,8 @@ func MapUser(routes fiber.Router, public fiber.Router, h user.Handlers) {
 	userGroup.Get("/whoami", h.Whoami)
 	userGroup.Get("/:userId", h.Show)
 	userGroup.Patch("/:userUUID/change-password", h.ChangePassword)
+	userGroup.Patch("/:userUUID/approve", h.ApproveUser)
+	userGroup.Patch("/:userUUID/reject", h.RejectUser)
 
 	roleGroup := routes.Group("/roles")
 	roleGroup.Get("/", h.Role)

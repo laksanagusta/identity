@@ -10,11 +10,14 @@ var (
 		phone_number,
 		password_hash,
 		organization_uuid,
+		is_approved,
+		avatar_gradient_start,
+		avatar_gradient_end,
 		created_at,
 		created_by,
 		updated_at,
 		updated_by
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING uuid`
 
 	findByUsername = `SELECT
@@ -25,7 +28,8 @@ var (
 		last_name,
 		phone_number,
 		password_hash,
-		organization_uuid
+		organization_uuid,
+		is_approved
 	FROM users
 	WHERE username = $1 AND deleted_at is null LIMIT 1`
 
@@ -62,7 +66,10 @@ var (
 			phone_number,
 			organization_uuid,
 			password_hash,
-			created_at
+			created_at,
+			is_approved,
+			avatar_gradient_start,
+			avatar_gradient_end
 		FROM users
 		WHERE uuid = $1 AND deleted_at is null LIMIT 1
 	`
@@ -77,7 +84,8 @@ var (
 			phone_number,
 			organization_uuid,
 			password_hash,
-			created_at
+			created_at,
+			is_approved
 		FROM users
 		WHERE employee_id = $1 AND deleted_at is null LIMIT 1
 	`

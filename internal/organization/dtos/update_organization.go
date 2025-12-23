@@ -28,8 +28,10 @@ func (r UpdateOrganizationReq) Validate() error {
 
 func (r UpdateOrganizationReq) NewUpdateOrganization(cred entities.AuthenticatedUser) entities.Organization {
 	organization := entities.Organization{
-		Name:    r.Name,
-		Address: r.Address,
+		Name:      r.Name,
+		Address:   r.Address,
+		Latitude:  r.Latitude,
+		Longitude: r.Longitude,
 	}
 
 	organization.UUID = r.OrganizationUUID

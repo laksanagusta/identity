@@ -23,9 +23,9 @@ func (s *Server) MapHandlers() error {
 		})
 	})
 
-	apiV1 := s.Fiber.Group("/api/v1")
+	apiExternalV1 := s.Fiber.Group("/api/external/v1")
 
-	apiExternalV1 := s.Fiber.Group("external/api/v1")
+	apiV1 := s.Fiber.Group("/api/v1")
 
 	apiPublicV1 := s.Fiber.Group("/api/public/v1")
 

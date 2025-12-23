@@ -14,6 +14,8 @@ type Handlers interface {
 	Index(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 	ChangePassword(c *fiber.Ctx) error
+	ApproveUser(c *fiber.Ctx) error
+	RejectUser(c *fiber.Ctx) error
 
 	// role
 	Role(c *fiber.Ctx) error

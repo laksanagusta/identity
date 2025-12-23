@@ -6,6 +6,7 @@ import (
 	"github.com/laksanagusta/identity/constants"
 	"github.com/laksanagusta/identity/internal/entities"
 	"github.com/laksanagusta/identity/pkg/errorhelper"
+	"github.com/laksanagusta/identity/pkg/helper"
 	"github.com/laksanagusta/identity/pkg/nullable"
 
 	"github.com/invopop/validation"
@@ -68,13 +69,18 @@ func (r CreateNewUserReq) Validate() error {
 }
 
 func (r CreateNewUserReq) NewUser() entities.User {
+	// Generate random gradient colors for avatar
+	gradientStart, gradientEnd := helper.GenerateRandomGradient()
+
 	user := entities.User{
-		EmployeeID:       nullable.NewString(r.EmployeeID),
-		Username:         nullable.NewString(r.Username),
-		FirstName:        nullable.NewString(r.FirstName),
-		LastName:         r.LastName,
-		PhoneNumber:      nullable.NewString(r.PhoneNumber),
-		OrganizationUUID: nullable.NewString(r.OrganizationUUID),
+		EmployeeID:          nullable.NewString(r.EmployeeID),
+		Username:            nullable.NewString(r.Username),
+		FirstName:           nullable.NewString(r.FirstName),
+		LastName:            r.LastName,
+		PhoneNumber:         nullable.NewString(r.PhoneNumber),
+		OrganizationUUID:    nullable.NewString(r.OrganizationUUID),
+		AvatarGradientStart: nullable.NewString(gradientStart),
+		AvatarGradientEnd:   nullable.NewString(gradientEnd),
 	}
 
 	for _, role := range r.RoleUUIDs {

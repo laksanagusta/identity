@@ -16,6 +16,8 @@ type UseCase interface {
 	Index(ctx context.Context, params *pagination.QueryParams) ([]*entities.User, *pagination.PagedResponse, error)
 	Delete(ctx context.Context, cred entities.AuthenticatedUser, uuid string) error
 	ChangePassword(ctx context.Context, cred entities.AuthenticatedUser, req dtos.ChangePassword) error
+	ApproveUser(ctx context.Context, cred entities.AuthenticatedUser, userUUID string) error
+	RejectUser(ctx context.Context, cred entities.AuthenticatedUser, userUUID string) error
 
 	Role(ctx context.Context) ([]entities.Role, error)
 	CreateRole(ctx context.Context, req dtos.CreateRoleReq, cred entities.AuthenticatedUser) (string, error)

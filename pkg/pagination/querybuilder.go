@@ -178,6 +178,7 @@ func (qb *QueryBuilder) isValidField(field string) bool {
 		"uuid":        true,
 		"username":    true,
 		"first_name":  true,
+		"is_approved": true,
 	}
 	return validFields[field]
 }

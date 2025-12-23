@@ -7,7 +7,9 @@ const (
 	ValidationError       = "validation_error"
 	UnauthorizedError     = "unauthorized_request"
 
-	ErrMsgAlreadyExist = "already exist"
-	ErrMsgNotFound     = "not found"
-	ErrDuplicated      = "duplicated"
+	ErrMsgAlreadyExist    = "already exist"
+	ErrMsgNotFound        = "not found"
+	ErrDuplicated         = "duplicated"
+	ErrMsgPendingApproval = "Akun Anda belum diverifikasi oleh admin. Silakan tunggu verifikasi."
+	ErrMsgAlreadyApproved = "User sudah disetujui sebelumnya"
 )

@@ -24,6 +24,8 @@ type ListOrganizationRespData struct {
 	UUID      string              `json:"id"`
 	Name      string              `json:"name"`
 	Address   nullable.NullString `json:"address"`
+	Latitude  nullable.NullString `json:"latitude"`
+	Longitude nullable.NullString `json:"longitude"`
 	Type      nullable.NullString `json:"type"`
 	CreatedAt nullable.NullString `json:"created_at"`
 }
@@ -47,6 +49,8 @@ type PublicOrganizationRes struct {
 	UUID      string              `json:"id"`
 	Name      string              `json:"name"`
 	Address   nullable.NullString `json:"address"`
+	Latitude  nullable.NullString `json:"latitude"`
+	Longitude nullable.NullString `json:"longitude"`
 	Type      nullable.NullString `json:"type"`
 	CreatedAt nullable.NullString `json:"created_at"`
 }
@@ -85,6 +89,8 @@ func NewListOrganizationResp(organizations []entities.Organization, metadata *en
 		data[k].UUID = organization.UUID
 		data[k].Name = organization.Name.GetOrDefault()
 		data[k].Address = organization.Address
+		data[k].Latitude = organization.Latitude
+		data[k].Longitude = organization.Longitude
 		data[k].Type = organization.Type
 		data[k].CreatedAt = nullable.NewString(organization.CreatedAt.Format("2006-01-02T15:04:05+0700"))
 	}
@@ -106,6 +112,8 @@ func NewPublicOrganizationRes(organization entities.Organization) PublicOrganiza
 		UUID:      organization.UUID,
 		Name:      organization.Name.GetOrDefault(),
 		Address:   organization.Address,
+		Latitude:  organization.Latitude,
+		Longitude: organization.Longitude,
 		Type:      organization.Type,
 		CreatedAt: nullable.NewString(organization.CreatedAt.Format("2006-01-02T15:04:05+0700")),
 	}

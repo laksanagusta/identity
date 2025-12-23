@@ -13,6 +13,7 @@ type Repository interface {
 	FindByPhoneNumber(ctx context.Context, phoneNumber string) (*entities.User, error)
 	FindByEmployeeID(ctx context.Context, employeeID string) (*entities.User, error)
 	Update(ctx context.Context, user entities.User) error
+	UpdateApprovalStatus(ctx context.Context, userUUID string, isApproved bool, updatedBy string) error
 	FindByUUID(ctx context.Context, uuid string) (*entities.User, error)
 	Index(ctx context.Context, params *pagination.QueryParams) ([]*entities.User, int64, error)
 	Delete(ctx context.Context, uuid string, username string) error

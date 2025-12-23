@@ -41,6 +41,9 @@ func (r *userRepo) Insert(ctx context.Context, user entities.User) (string, erro
 		user.PhoneNumber,
 		user.PasswordHash,
 		user.OrganizationUUID,
+		user.IsApproved,
+		user.AvatarGradientStart,
+		user.AvatarGradientEnd,
 		time.Now(),
 		user.CreatedBy,
 		time.Now(),
@@ -65,6 +68,7 @@ func (r *userRepo) FindByUsername(ctx context.Context, username string) (*entiti
 		&user.PhoneNumber,
 		&user.PasswordHash,
 		&user.OrganizationUUID,
+		&user.IsApproved,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -132,6 +136,28 @@ func (r *userRepo) Update(ctx context.Context, user entities.User) error {
 	return nil
 }
 
+func (r *userRepo) UpdateApprovalStatus(ctx context.Context, userUUID string, isApproved bool, updatedBy string) error {
+	res, err := r.db.ExecContext(ctx,
+		`UPDATE users SET is_approved = $1, updated_by = $2, updated_at = $3 WHERE uuid = $4`,
+		isApproved,
+		updatedBy,
+		time.Now(),
+		userUUID,
+	)
+	if err != nil {
+		return err
+	}
+	rowAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowAffected == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
+}
+
 func (r *userRepo) FindByUUID(ctx context.Context, uuid string) (*entities.User, error) {
 	var user entities.User
 	row := r.db.QueryRowxContext(ctx, findUserById, uuid)
@@ -145,6 +171,9 @@ func (r *userRepo) FindByUUID(ctx context.Context, uuid string) (*entities.User,
 		&user.OrganizationUUID,
 		&user.PasswordHash,
 		&user.CreatedAt,
+		&user.IsApproved,
+		&user.AvatarGradientStart,
+		&user.AvatarGradientEnd,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -170,6 +199,7 @@ func (r *userRepo) FindByEmployeeID(ctx context.Context, employeeID string) (*en
 		&user.OrganizationUUID,
 		&user.PasswordHash,
 		&user.CreatedAt,
+		&user.IsApproved,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

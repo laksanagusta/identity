@@ -11,6 +11,8 @@ type Organization struct {
 	Name       nullable.NullString `json:"name" db:"name"`
 	Code       nullable.NullString `json:"code" db:"code"`
 	Address    nullable.NullString `json:"address" db:"address"`
+	Latitude   nullable.NullString `json:"latitude" db:"latitude"`
+	Longitude  nullable.NullString `json:"longitude" db:"longitude"`
 	Type       nullable.NullString `json:"type" db:"type"`
 	ParentUUID nullable.NullString `json:"parent_id" db:"parent_uuid"`
 	Level      nullable.NullInt32  `json:"level" db:"level"`

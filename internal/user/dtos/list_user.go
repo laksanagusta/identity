@@ -22,15 +22,18 @@ type ListUserReq struct {
 }
 
 type ListUserRespData struct {
-	UUID         string                       `json:"id"`
-	EmployeeID   nullable.NullString          `json:"employee_id"`
-	Username     nullable.NullString          `json:"username"`
-	Firstname    nullable.NullString          `json:"first_name"`
-	Lastname     nullable.NullString          `json:"last_name"`
-	PhoneNumber  nullable.NullString          `json:"phone_number"`
-	Roles        []ListUserRespDataRole       `json:"roles"`
-	Organization ListUserRespDataOrganization `json:"organizations"`
-	CreatedAt    nullable.NullString          `json:"created_at"`
+	UUID                string                       `json:"id"`
+	EmployeeID          nullable.NullString          `json:"employee_id"`
+	Username            nullable.NullString          `json:"username"`
+	Firstname           nullable.NullString          `json:"first_name"`
+	Lastname            nullable.NullString          `json:"last_name"`
+	PhoneNumber         nullable.NullString          `json:"phone_number"`
+	AvatarGradientStart nullable.NullString          `json:"avatar_gradient_start"`
+	AvatarGradientEnd   nullable.NullString          `json:"avatar_gradient_end"`
+	Roles               []ListUserRespDataRole       `json:"roles"`
+	Organization        ListUserRespDataOrganization `json:"organizations"`
+	CreatedAt           nullable.NullString          `json:"created_at"`
+	IsApproved          bool                         `json:"is_approved"`
 }
 
 type ListUserRespDataRole struct {
@@ -69,17 +72,20 @@ func NewListUserResp(users []*entities.User) []ListUserRespData {
 	data := make([]ListUserRespData, len(users))
 	for i, user := range users {
 		data[i] = ListUserRespData{
-			UUID:        user.UUID,
-			EmployeeID:  user.EmployeeID,
-			Username:    user.Username,
-			Firstname:   user.FirstName,
-			Lastname:    user.LastName,
-			PhoneNumber: user.PhoneNumber,
+			UUID:                user.UUID,
+			EmployeeID:          user.EmployeeID,
+			Username:            user.Username,
+			Firstname:           user.FirstName,
+			Lastname:            user.LastName,
+			PhoneNumber:         user.PhoneNumber,
+			AvatarGradientStart: user.AvatarGradientStart,
+			AvatarGradientEnd:   user.AvatarGradientEnd,
 			Organization: ListUserRespDataOrganization{
 				UUID: user.Organization.UUID,
 				Name: user.Organization.Name,
 			},
-			CreatedAt: nullable.NewString(user.CreatedAt.Format(time.RFC3339)),
+			CreatedAt:  nullable.NewString(user.CreatedAt.Format(time.RFC3339)),
+			IsApproved: user.IsApproved,
 		}
 
 		for _, role := range user.Roles {

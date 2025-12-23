@@ -8,12 +8,14 @@ import (
 )
 
 type ShowOrganizationRes struct {
-	UUID    string                 `json:"id"`
-	Name    nullable.NullString    `json:"name"`
-	Code    nullable.NullString    `json:"code"`
-	Address nullable.NullString    `json:"address"`
-	Type    nullable.NullString    `json:"type"`
-	Parent  *ParentOrganizationRes `json:"parent,omitempty"`
+	UUID      string                 `json:"id"`
+	Name      nullable.NullString    `json:"name"`
+	Code      nullable.NullString    `json:"code"`
+	Address   nullable.NullString    `json:"address"`
+	Latitude  nullable.NullString    `json:"latitude"`
+	Longitude nullable.NullString    `json:"longitude"`
+	Type      nullable.NullString    `json:"type"`
+	Parent    *ParentOrganizationRes `json:"parent,omitempty"`
 
 	Organizations []ShowOrganizationRes `json:"organizations"`
 
@@ -23,11 +25,13 @@ type ShowOrganizationRes struct {
 
 // ParentOrganizationRes - simplified parent without children to avoid circular reference
 type ParentOrganizationRes struct {
-	UUID    string              `json:"id"`
-	Name    nullable.NullString `json:"name"`
-	Code    nullable.NullString `json:"code"`
-	Address nullable.NullString `json:"address"`
-	Type    nullable.NullString `json:"type"`
+	UUID      string              `json:"id"`
+	Name      nullable.NullString `json:"name"`
+	Code      nullable.NullString `json:"code"`
+	Address   nullable.NullString `json:"address"`
+	Latitude  nullable.NullString `json:"latitude"`
+	Longitude nullable.NullString `json:"longitude"`
+	Type      nullable.NullString `json:"type"`
 }
 
 func NewShowOrganizationRes(organization *entities.Organization) ShowOrganizationRes {
@@ -40,6 +44,8 @@ func NewShowOrganizationRes(organization *entities.Organization) ShowOrganizatio
 		Name:          organization.Name,
 		Code:          organization.Code,
 		Address:       organization.Address,
+		Latitude:      organization.Latitude,
+		Longitude:     organization.Longitude,
 		Type:          organization.Type,
 		Organizations: []ShowOrganizationRes{}, // Initialize as empty array
 		CreatedAt:     organization.CreatedAt,
@@ -49,11 +55,13 @@ func NewShowOrganizationRes(organization *entities.Organization) ShowOrganizatio
 	// Include parent information (without children to avoid circular reference)
 	if organization.Parent != nil {
 		res.Parent = &ParentOrganizationRes{
-			UUID:    organization.Parent.UUID,
-			Name:    organization.Parent.Name,
-			Code:    organization.Parent.Code,
-			Address: organization.Parent.Address,
-			Type:    organization.Parent.Type,
+			UUID:      organization.Parent.UUID,
+			Name:      organization.Parent.Name,
+			Code:      organization.Parent.Code,
+			Address:   organization.Parent.Address,
+			Latitude:  organization.Parent.Latitude,
+			Longitude: organization.Parent.Longitude,
+			Type:      organization.Parent.Type,
 		}
 	}
 
@@ -80,6 +88,8 @@ func newChildOrganizationRes(organization *entities.Organization) ShowOrganizati
 		Name:          organization.Name,
 		Code:          organization.Code,
 		Address:       organization.Address,
+		Latitude:      organization.Latitude,
+		Longitude:     organization.Longitude,
 		Type:          organization.Type,
 		Organizations: []ShowOrganizationRes{}, // Initialize as empty array
 		CreatedAt:     organization.CreatedAt,

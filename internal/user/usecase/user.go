@@ -131,7 +131,7 @@ func (uc *UserUseCase) Update(ctx context.Context, cred entities.AuthenticatedUs
 		if err != nil {
 			return err
 		}
-		if foundUser != nil {
+		if foundUser != nil && foundUser.UUID != req.UserUUID {
 			return errorhelper.BadRequestMap(map[string][]string{
 				"username": {constants.ErrMsgAlreadyExist},
 			})
@@ -262,6 +262,13 @@ func (uc *UserUseCase) Login(ctx context.Context, req dtos.LoginReq) (string, er
 	if err != nil {
 		return "", errorhelper.BadRequestMap(map[string][]string{
 			"password": {"invalid"},
+		})
+	}
+
+	// Check if user is approved by admin
+	if !user.IsApproved {
+		return "", errorhelper.BadRequestMap(map[string][]string{
+			"account": {constants.ErrMsgPendingApproval},
 		})
 	}
 
@@ -410,6 +417,51 @@ func (uc *UserUseCase) Delete(ctx context.Context, cred entities.AuthenticatedUs
 	}
 
 	err = uc.userRepo.Delete(ctx, uuid, cred.Username)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uc *UserUseCase) ApproveUser(ctx context.Context, cred entities.AuthenticatedUser, userUUID string) error {
+	user, err := uc.userRepo.FindByUUID(ctx, userUUID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errorhelper.BadRequestMap(map[string][]string{
+			"user_id": {constants.ErrMsgNotFound},
+		})
+	}
+
+	if user.IsApproved {
+		return errorhelper.BadRequestMap(map[string][]string{
+			"user": {constants.ErrMsgAlreadyApproved},
+		})
+	}
+
+	err = uc.userRepo.UpdateApprovalStatus(ctx, userUUID, true, cred.Username)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uc *UserUseCase) RejectUser(ctx context.Context, cred entities.AuthenticatedUser, userUUID string) error {
+	user, err := uc.userRepo.FindByUUID(ctx, userUUID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errorhelper.BadRequestMap(map[string][]string{
+			"user_id": {constants.ErrMsgNotFound},
+		})
+	}
+
+	// Delete the user instead of just rejecting
+	err = uc.userRepo.Delete(ctx, userUUID, cred.Username)
 	if err != nil {
 		return err
 	}

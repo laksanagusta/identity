@@ -32,19 +32,22 @@ func (r ExternalListUserReq) Validate() error {
 
 // ExternalUserRes response structure untuk external API
 type ExternalUserRes struct {
-	UUID         string                   `json:"id"`
-	EmployeeID   nullable.NullString      `json:"employee_id"`
-	Username     nullable.NullString      `json:"username"`
-	FirstName    nullable.NullString      `json:"first_name"`
-	LastName     nullable.NullString      `json:"last_name"`
-	Email        nullable.NullString      `json:"email"`
-	PhoneNumber  nullable.NullString      `json:"phone_number"`
-	IsActive     bool                     `json:"is_active"`
-	LastLoginAt  *time.Time               `json:"last_login_at,omitempty"`
-	Organization *ExternalOrganizationRes `json:"organization,omitempty"`
-	Roles        []ExternalRoleRes        `json:"roles"`
-	CreatedAt    time.Time                `json:"created_at"`
-	UpdatedAt    time.Time                `json:"updated_at"`
+	UUID                string                   `json:"id"`
+	EmployeeID          nullable.NullString      `json:"employee_id"`
+	Username            nullable.NullString      `json:"username"`
+	FirstName           nullable.NullString      `json:"first_name"`
+	LastName            nullable.NullString      `json:"last_name"`
+	Email               nullable.NullString      `json:"email"`
+	PhoneNumber         nullable.NullString      `json:"phone_number"`
+	AvatarGradientStart nullable.NullString      `json:"avatar_gradient_start"`
+	AvatarGradientEnd   nullable.NullString      `json:"avatar_gradient_end"`
+	IsActive            bool                     `json:"is_active"`
+	IsApproved          bool                     `json:"is_approved"`
+	LastLoginAt         *time.Time               `json:"last_login_at,omitempty"`
+	Organization        *ExternalOrganizationRes `json:"organization,omitempty"`
+	Roles               []ExternalRoleRes        `json:"roles"`
+	CreatedAt           time.Time                `json:"created_at"`
+	UpdatedAt           time.Time                `json:"updated_at"`
 }
 
 // ExternalOrganizationRes organization info untuk external API
@@ -64,17 +67,20 @@ type ExternalRoleRes struct {
 // NewExternalUserRes convert dari entities.User ke ExternalUserRes
 func NewExternalUserRes(user entities.User) ExternalUserRes {
 	res := ExternalUserRes{
-		UUID:        user.UUID,
-		EmployeeID:  user.EmployeeID,
-		Username:    user.Username,
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		Email:       user.Email,
-		PhoneNumber: user.PhoneNumber,
-		IsActive:    user.IsActive,
-		LastLoginAt: user.LastLoginAt,
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
+		UUID:                user.UUID,
+		EmployeeID:          user.EmployeeID,
+		Username:            user.Username,
+		FirstName:           user.FirstName,
+		LastName:            user.LastName,
+		Email:               user.Email,
+		PhoneNumber:         user.PhoneNumber,
+		AvatarGradientStart: user.AvatarGradientStart,
+		AvatarGradientEnd:   user.AvatarGradientEnd,
+		IsActive:            user.IsActive,
+		IsApproved:          user.IsApproved,
+		LastLoginAt:         user.LastLoginAt,
+		CreatedAt:           user.CreatedAt,
+		UpdatedAt:           user.UpdatedAt,
 	}
 
 	// Add organization info jika ada

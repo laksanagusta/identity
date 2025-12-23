@@ -6,6 +6,8 @@ var (
 		name,
 		code,
 		address,
+		latitude,
+		longitude,
 		type,
 		path,
 		parent_uuid,
@@ -13,17 +15,19 @@ var (
 		created_by,
 		updated_at,
 		updated_by
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		RETURNING UUID`
 
 	updateOrganization = `
 		UPDATE organizations SET
 			name = CASE WHEN $1 THEN $2 ELSE name END,
 			address = CASE WHEN $3 THEN $4 ELSE address END,
-			type = CASE WHEN $5 THEN $6 ELSE type END,
-			updated_at = $7,
-			updated_by = $8
-		WHERE uuid = $9
+			latitude = CASE WHEN $5 THEN $6 ELSE latitude END,
+			longitude = CASE WHEN $7 THEN $8 ELSE longitude END,
+			type = CASE WHEN $9 THEN $10 ELSE type END,
+			updated_at = $11,
+			updated_by = $12
+		WHERE uuid = $13
 	`
 
 	findOrganizationById = `
@@ -35,6 +39,8 @@ var (
 			o.name,
 			o.code,
 			o.address,
+			o.latitude,
+			o.longitude,
 			o.type,
 			o.parent_uuid,
 			o.path,
@@ -55,6 +61,8 @@ var (
 			s.uuid, 
 			s.name, 
 			s.address,
+			s.latitude,
+			s.longitude,
 			s.created_at,
 			s.type,
 			s.created_by
@@ -80,7 +88,9 @@ var (
 			o.uuid, 
 			o.name, 
 			o.code, 
-			o.address, 
+			o.address,
+			o.latitude,
+			o.longitude, 
 			o.type, 
 			o.created_at, 
 			o.created_by, 

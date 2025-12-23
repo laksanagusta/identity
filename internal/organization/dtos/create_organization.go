@@ -62,6 +62,8 @@ func (r CreateNewOrganizationReq) NewOrganization(cred entities.AuthenticatedUse
 	organization := entities.Organization{
 		Name:       r.Name,
 		Address:    r.Address,
+		Latitude:   r.Latitude,
+		Longitude:  r.Longitude,
 		Type:       r.Type,
 		ParentUUID: r.ParentId,
 	}

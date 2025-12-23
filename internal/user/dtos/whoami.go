@@ -6,16 +6,18 @@ import (
 )
 
 type WhoamiRes struct {
-	UUID         string                `json:"id"`
-	EmployeeID   nullable.NullString   `json:"employee_id"`
-	Username     nullable.NullString   `json:"username"`
-	FirstName    nullable.NullString   `json:"first_name"`
-	LastName     nullable.NullString   `json:"last_name"`
-	PhoneNumber  nullable.NullString   `json:"phone_number"`
-	Roles        []WhoamiResRole       `json:"roles"`
-	Permissions  []WhoamiResPermission `json:"permissions"`
-	Organization WhoamiResOrganization `json:"organization"`
-	Scopes       []string              `json:"scopes"`
+	UUID                string                `json:"id"`
+	EmployeeID          nullable.NullString   `json:"employee_id"`
+	Username            nullable.NullString   `json:"username"`
+	FirstName           nullable.NullString   `json:"first_name"`
+	LastName            nullable.NullString   `json:"last_name"`
+	PhoneNumber         nullable.NullString   `json:"phone_number"`
+	AvatarGradientStart nullable.NullString   `json:"avatar_gradient_start"`
+	AvatarGradientEnd   nullable.NullString   `json:"avatar_gradient_end"`
+	Roles               []WhoamiResRole       `json:"roles"`
+	Permissions         []WhoamiResPermission `json:"permissions"`
+	Organization        WhoamiResOrganization `json:"organization"`
+	Scopes              []string              `json:"scopes"`
 }
 
 type WhoamiResRole struct {
@@ -38,12 +40,14 @@ type WhoamiResPermission struct {
 
 func NewWhoamiRes(user entities.User, scopes []string) WhoamiRes {
 	whoami := WhoamiRes{
-		UUID:        user.UUID,
-		EmployeeID:  user.EmployeeID,
-		Username:    user.Username,
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		PhoneNumber: user.PhoneNumber,
+		UUID:                user.UUID,
+		EmployeeID:          user.EmployeeID,
+		Username:            user.Username,
+		FirstName:           user.FirstName,
+		LastName:            user.LastName,
+		PhoneNumber:         user.PhoneNumber,
+		AvatarGradientStart: user.AvatarGradientStart,
+		AvatarGradientEnd:   user.AvatarGradientEnd,
 		Organization: WhoamiResOrganization{
 			UUID: user.Organization.UUID,
 			Name: user.Organization.Name,

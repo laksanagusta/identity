@@ -277,6 +277,66 @@ func (h *userHandler) ChangePassword(c *fiber.Ctx) error {
 	return c.SendStatus(http.StatusOK)
 }
 
+func (h *userHandler) ApproveUser(c *fiber.Ctx) error {
+	var params struct {
+		UserUUID string `params:"userUUID"`
+	}
+
+	err := c.ParamsParser(&params)
+	if err != nil {
+		return err
+	}
+
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	err = h.userUc.ApproveUser(
+		c.Context(),
+		*authUser,
+		params.UserUUID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(http.StatusOK).JSON(entities.ResponseData{
+		Data: map[string]string{"message": "User berhasil disetujui"},
+	})
+}
+
+func (h *userHandler) RejectUser(c *fiber.Ctx) error {
+	var params struct {
+		UserUUID string `params:"userUUID"`
+	}
+
+	err := c.ParamsParser(&params)
+	if err != nil {
+		return err
+	}
+
+	// Safely get authenticated user
+	authUser, err := middleware.GetAuthenticatedUser(c)
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	err = h.userUc.RejectUser(
+		c.Context(),
+		*authUser,
+		params.UserUUID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(http.StatusOK).JSON(entities.ResponseData{
+		Data: map[string]string{"message": "User berhasil ditolak"},
+	})
+}
+
 func (h *userHandler) CreateRole(c *fiber.Ctx) error {
 	var createRole dtos.CreateRoleReq
 	err := c.BodyParser(&createRole)
